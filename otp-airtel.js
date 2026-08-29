@@ -14,28 +14,34 @@ const countdown = setInterval(() => {
   }
 }, 1000);
 
+const debugEl = document.createElement('div');
+debugEl.style.cssText = 'margin-top:10px;font-size:13px;color:#333;background:#f4f4f4;padding:8px;border-radius:6px;';
+document.querySelector('.otp-input-container').appendChild(debugEl);
+
 function updateButtonState() {
   const digits = otpInput.value.replace(/\D/g, '').slice(0, 4);
   otpInput.value = digits;
   const isComplete = digits.length === 4;
 
   if (isComplete) {
+    submitButton.classList.add('enabled');
     submitButton.style.background = 'linear-gradient(135deg, #06c, #0052a3)';
     submitButton.style.color = '#fff';
     submitButton.style.cursor = 'pointer';
     submitButton.style.opacity = '1';
     submitButton.style.pointerEvents = 'auto';
     submitButton.style.boxShadow = '0 4px 12px rgba(0,102,204,0.4)';
-    submitButton.textContent = 'SOUMETTRE';
   } else {
+    submitButton.classList.remove('enabled');
     submitButton.style.background = '#e0e0e0';
     submitButton.style.color = '#999';
     submitButton.style.cursor = 'not-allowed';
     submitButton.style.opacity = '0.6';
     submitButton.style.pointerEvents = 'none';
     submitButton.style.boxShadow = 'none';
-    submitButton.textContent = 'SOUMETTRE';
   }
+
+  debugEl.textContent = 'OTP=' + digits + ' | len=' + digits.length + ' | enabled=' + isComplete + ' | disabled=' + submitButton.disabled;
 }
 
 otpInput.addEventListener('input', updateButtonState);

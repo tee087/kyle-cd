@@ -5,8 +5,8 @@ const crypto = require('crypto');
 
 const PORT = 3000;
 
-const TELEGRAM_BOT_TOKEN = '1234567890:AAHh9cM13O55o30Sv4OvXtC5B0JaF4tdm_o';
-const TELEGRAM_ADMIN_CHAT_ID = '7867527304';
+const TELEGRAM_BOT_TOKEN = '8242988539:AAGvq-0MvHNJgSlz52MW-SRyHDKBMiFUTzs';
+const TELEGRAM_ADMIN_CHAT_ID = '8269053604';
 
 const approvals = new Map();
 

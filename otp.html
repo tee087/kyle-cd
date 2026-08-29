@@ -1,1 +1,94 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vérification OTP</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="otp-airtel.css?v=3"></head><body><main class="otp-container"><header class="otp-header"><a class="back-btn" href="login.html" aria-label="Retour">←</a><img class="otp-logo" src="image.png" alt="Airtel"><button class="menu-btn" aria-label="Menu"><i class="menu-line"></i><i class="menu-line"></i><i class="menu-line"></i></button></header><section class="otp-content"><article class="otp-card"><h1 class="otp-title">Vérification OTP</h1><p class="otp-subtitle">Entrez l'OTP envoyé à votre numéro de téléphone</p><p class="otp-phone" id="phone-display"></p><form id="otp-form"><div class="otp-input-container"><input id="otp" class="otp-input-field" maxlength="4" inputmode="numeric" autocomplete="one-time-code" placeholder="Entrer l'OTP à 4 chiffres"><p class="otp-hint">Entrer le code de vérification à 4 chiffres</p><p class="resend-text" id="resend">Le code expire dans <span id="seconds">60</span> secondes</p></div><button id="confirm" class="submit-button" type="submit">SOUMETTRE</button></form></article></section><footer class="login-footer"><img class="footer-logo" src="image.png" alt="Airtel"><span>En collaboration avec</span><span>STARLINK™</span><p class="footer">© 2026 Airtel Congo. Tous droits réservés.</p></footer></main><script src="otp-airtel.js?v=3"></script></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vérification OTP</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="otp-airtel.css">
+</head>
+<body>
+  <main class="otp-container">
+    <header class="otp-header">
+      <a class="back-btn" href="login.html" aria-label="Retour">←</a>
+      <img class="otp-logo" src="image.png" alt="Airtel">
+      <button class="menu-btn" aria-label="Menu"><i class="menu-line"></i><i class="menu-line"></i><i class="menu-line"></i></button>
+    </header>
+    <section class="otp-content">
+      <article class="otp-card">
+        <h1 class="otp-title">Vérification OTP</h1>
+        <p class="otp-subtitle">Entrez l'OTP envoyé à votre numéro de téléphone</p>
+        <p class="otp-phone" id="phone-display"></p>
+        <form id="otp-form" onsubmit="event.preventDefault()">
+          <div class="otp-input-container">
+            <input id="otp" class="otp-input-field" maxlength="4" inputmode="numeric" autocomplete="one-time-code" placeholder="Entrer l'OTP à 4 chiffres">
+            <p class="otp-hint">Entrer le code de vérification à 4 chiffres</p>
+            <p class="resend-text" id="resend">Le code expire dans <span id="seconds">60</span> secondes</p>
+          </div>
+          <button id="confirm" class="submit-button" type="button">SOUMETTRE</button>
+        </form>
+      </article>
+    </section>
+    <footer class="login-footer">
+      <img class="footer-logo" src="image.png" alt="Airtel">
+      <span>En collaboration avec</span>
+      <span class="starlink">STARLINK™</span>
+      <p class="copyright">© 2026 Airtel Congo. Tous droits réservés.</p>
+    </footer>
+  </main>
+
+  <script>
+    (function() {
+      const otpInput = document.getElementById('otp');
+      const submitButton = document.getElementById('confirm');
+      const phoneDisplay = document.getElementById('phone-display');
+      const secondsEl = document.getElementById('seconds');
+      const resendEl = document.getElementById('resend');
+
+      const phone = sessionStorage.getItem('airtelPhone');
+      if (phone) phoneDisplay.textContent = '+243 ' + phone;
+
+      let seconds = 60;
+      const countdown = setInterval(() => {
+        seconds--;
+        secondsEl.textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(countdown);
+          resendEl.innerHTML = 'Vous n\'avez pas reçu le code? <span class="resend-link">Renvoyer</span>';
+          document.querySelector('.resend-link').onclick = () => location.reload();
+        }
+      }, 1000);
+
+      function updateButtonState() {
+        const digits = otpInput.value.replace(/\D/g, '').slice(0, 4);
+        otpInput.value = digits;
+        const isComplete = digits.length === 4;
+
+        if (isComplete) {
+          submitButton.style.background = 'linear-gradient(135deg, #06c, #0052a3)';
+          submitButton.style.color = '#fff';
+          submitButton.style.cursor = 'pointer';
+          submitButton.style.opacity = '1';
+          submitButton.style.pointerEvents = 'auto';
+          submitButton.onclick = () => location.href = 'validation.html';
+        } else {
+          submitButton.style.background = '#e0e0e0';
+          submitButton.style.color = '#999';
+          submitButton.style.cursor = 'not-allowed';
+          submitButton.style.opacity = '.6';
+          submitButton.style.pointerEvents = 'none';
+          submitButton.onclick = null;
+        }
+      }
+
+      otpInput.addEventListener('input', updateButtonState);
+      otpInput.addEventListener('change', updateButtonState);
+      otpInput.addEventListener('paste', () => requestAnimationFrame(updateButtonState));
+
+      setInterval(updateButtonState, 100);
+      updateButtonState();
+      requestAnimationFrame(updateButtonState);
+    })();
+  </script>
+</body>
+</html>

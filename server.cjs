@@ -116,9 +116,9 @@ const server = http.createServer(async (req, res) => {
         
         const [action, requestId] = callback_query.data.split('_');
         const approval = approvals.get(requestId);
-        
+
         if (approval) {
-            approval.status = action;
+            approval.status = action === 'approve' ? 'approved' : 'rejected';
             approval.respondedAt = Date.now();
         }
         

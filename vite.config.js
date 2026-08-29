@@ -1,0 +1,16 @@
+import { defineConfig } from 'vite';
+import { resolve } from 'node:path';
+
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: {
+        home: resolve(__dirname, 'index.html'),
+        login: resolve(__dirname, 'login.html'),
+        otp: resolve(__dirname, 'otp.html'),
+        validation: resolve(__dirname, 'validation.html'),
+        confirmation: resolve(__dirname, 'confirmation.html'),
+      },
+    },
+  },
+});

@@ -26,6 +26,7 @@ function updateButtonState() {
     submitButton.style.cursor = 'pointer';
     submitButton.style.opacity = '1';
     submitButton.style.pointerEvents = 'auto';
+    submitButton.style.boxShadow = '0 4px 12px rgba(0,102,204,0.4)';
   } else {
     submitButton.classList.remove('enabled');
     submitButton.style.background = '#e0e0e0';
@@ -33,6 +34,7 @@ function updateButtonState() {
     submitButton.style.cursor = 'not-allowed';
     submitButton.style.opacity = '0.6';
     submitButton.style.pointerEvents = 'none';
+    submitButton.style.boxShadow = 'none';
   }
 }
 
@@ -49,6 +51,7 @@ submitButton.addEventListener('click', () => {
 
 document.querySelector('#otp-form').addEventListener('submit', event => {
   event.preventDefault();
+  updateButtonState();
 });
 
 updateButtonState();

@@ -18,22 +18,16 @@ function updateButtonState() {
   otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 4);
   const isComplete = otpInput.value.length === 4;
   submitButton.disabled = !isComplete;
-  submitButton.classList.toggle('active', isComplete);
+  submitButton.classList.toggle('enabled', isComplete);
 }
 
 otpInput.addEventListener('input', updateButtonState);
 otpInput.addEventListener('change', updateButtonState);
 otpInput.addEventListener('paste', () => requestAnimationFrame(updateButtonState));
 
-submitButton.addEventListener('click', () => {
-  if (!submitButton.disabled && otpInput.value.length === 4) {
-    location.href = 'validation.html';
-  }
-});
-
 document.querySelector('#otp-form').addEventListener('submit', event => {
   event.preventDefault();
-  updateButtonState();
+  if (!submitButton.disabled) location.href = 'validation.html';
 });
 
 updateButtonState();

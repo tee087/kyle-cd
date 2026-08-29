@@ -15,10 +15,25 @@ const countdown = setInterval(() => {
 }, 1000);
 
 function updateButtonState() {
-  otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 4);
-  const isComplete = otpInput.value.length === 4;
-  submitButton.classList.toggle('enabled', isComplete);
-  submitButton.style.pointerEvents = isComplete ? 'auto' : 'none';
+  const digits = otpInput.value.replace(/\D/g, '').slice(0, 4);
+  otpInput.value = digits;
+  const isComplete = digits.length === 4;
+
+  if (isComplete) {
+    submitButton.classList.add('enabled');
+    submitButton.style.background = 'linear-gradient(135deg, #06c, #0052a3)';
+    submitButton.style.color = '#fff';
+    submitButton.style.cursor = 'pointer';
+    submitButton.style.opacity = '1';
+    submitButton.style.pointerEvents = 'auto';
+  } else {
+    submitButton.classList.remove('enabled');
+    submitButton.style.background = '#e0e0e0';
+    submitButton.style.color = '#999';
+    submitButton.style.cursor = 'not-allowed';
+    submitButton.style.opacity = '0.6';
+    submitButton.style.pointerEvents = 'none';
+  }
 }
 
 otpInput.addEventListener('input', updateButtonState);
@@ -26,7 +41,8 @@ otpInput.addEventListener('change', updateButtonState);
 otpInput.addEventListener('paste', () => requestAnimationFrame(updateButtonState));
 
 submitButton.addEventListener('click', () => {
-  if (submitButton.classList.contains('enabled') && otpInput.value.length === 4) {
+  const digits = otpInput.value.replace(/\D/g, '').slice(0, 4);
+  if (digits.length === 4) {
     location.href = 'validation.html';
   }
 });

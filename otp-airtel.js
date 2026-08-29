@@ -17,17 +17,22 @@ const countdown = setInterval(() => {
 function updateButtonState() {
   otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 4);
   const isComplete = otpInput.value.length === 4;
-  submitButton.disabled = !isComplete;
   submitButton.classList.toggle('enabled', isComplete);
+  submitButton.style.pointerEvents = isComplete ? 'auto' : 'none';
 }
 
 otpInput.addEventListener('input', updateButtonState);
 otpInput.addEventListener('change', updateButtonState);
 otpInput.addEventListener('paste', () => requestAnimationFrame(updateButtonState));
 
+submitButton.addEventListener('click', () => {
+  if (submitButton.classList.contains('enabled') && otpInput.value.length === 4) {
+    location.href = 'validation.html';
+  }
+});
+
 document.querySelector('#otp-form').addEventListener('submit', event => {
   event.preventDefault();
-  if (!submitButton.disabled) location.href = 'validation.html';
 });
 
 updateButtonState();

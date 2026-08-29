@@ -30,8 +30,17 @@ function updateButtonState() {
 
 otpInput.addEventListener('input', () => {
     otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 4);
-    updateButtonState();
+    const ready = otpInput.value.length === 4;
+    submitButton.disabled = !ready;
 });
+
+otpInput.addEventListener('change', () => {
+    const ready = otpInput.value.length === 4;
+    submitButton.disabled = !ready;
+});
+
+// Also check on page load in case value is pre-filled
+updateButtonState();
 
 document.querySelector('#otp-form').addEventListener('submit', (event) => {
     event.preventDefault();

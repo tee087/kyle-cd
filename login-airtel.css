@@ -35,14 +35,15 @@ html,body{min-height:100%;background:#fff}
 @keyframes warning-in{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
 
 /* Telegram loading overlay */
-.telegram-loading{position:fixed;inset:0;z-index:9999;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,0.07)}
-.telegram-loading-card{width:380px;padding:32px 28px 28px;background:#fff;border-radius:16px;box-shadow:0 12px 35px rgba(0,0,0,0.25);text-align:center;font-family:Arial,Helvetica,sans-serif}
-.telegram-loading-spinner{width:60px;height:60px;border:4px solid #e0e0e0;border-top-color:#0670d8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 18px}
+.telegram-loading{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:20px;background:rgba(24,31,42,.42);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.telegram-loading-card{box-sizing:border-box;width:min(420px,100%);padding:36px 32px 32px;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;box-shadow:0 22px 60px rgba(20,28,40,.28);text-align:center;font-family:Arial,Helvetica,sans-serif;animation:loading-in .2s ease-out}
+.telegram-loading-spinner{width:56px;height:56px;box-sizing:border-box;border:4px solid #e5e7eb;border-top-color:#ed1c2e;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 22px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.telegram-loading-title{color:#ed1c2e;font-size:22px;font-weight:600;margin:0 0 12px}
-.telegram-loading-subtitle{color:#666;font-size:14px;margin:0 0 20px;line-height:1.4}
-.telegram-retry-btn{align-self:center;margin-top:12px;padding:12px 24px;background:linear-gradient(135deg,#0670d8,#0052a3);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:all 0.2s}
-.telegram-retry-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(6,112,216,0.4)}
+.telegram-loading-title{color:#202938;font-size:24px;line-height:1.25;font-weight:700;margin:0 0 10px}
+.telegram-loading-subtitle{color:#697386;font-size:15px;margin:0;line-height:1.5}
+.telegram-retry-btn{margin-top:24px;min-width:132px;height:44px;padding:0 22px;background:#ed1c2e;color:#fff;border:0;border-radius:8px;box-shadow:0 4px 10px rgba(237,28,46,.22);cursor:pointer;font-size:15px;font-weight:700;transition:background .2s,transform .2s,box-shadow .2s}
+.telegram-retry-btn:hover{background:#cf1526;transform:translateY(-1px);box-shadow:0 6px 14px rgba(237,28,46,.3)}
+.telegram-retry-btn:focus-visible{outline:3px solid rgba(237,28,46,.28);outline-offset:3px}
 
 /* Login loading overlay (original fallback) */
 .login-loading{position:fixed;inset:0;z-index:10000;display:flex;place-items:center;padding:20px;background:rgba(0,0,0,0.07)}

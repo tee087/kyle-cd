@@ -17,20 +17,25 @@ const countdown = setInterval(() => {
     }
 }, 1000);
 
-otpInput.addEventListener('input', (e) => {
-    otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 4);
+function updateButtonState() {
     const ready = otpInput.value.length === 4;
     if (ready) {
         submitButton.disabled = false;
+        submitButton.classList.add('active');
     } else {
         submitButton.disabled = true;
+        submitButton.classList.remove('active');
     }
+}
+
+otpInput.addEventListener('input', () => {
+    otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 4);
+    updateButtonState();
 });
 
 document.querySelector('#otp-form').addEventListener('submit', (event) => {
     event.preventDefault();
     if (otpInput.value.length === 4) {
-        // Continue to validation page
         location.href = 'validation.html';
     }
 });

